@@ -8,7 +8,7 @@ Arduino code for a DIY Curing Chamber (made from a old fridge)
 
 It controls the temperature and humidity. With a adjustable range and time limit for activation (safety).
 
-This code use a single DHT22 sensor.
+This stetup uses a single DHT22 sensor.
 
 AC power to a refrigerator
 AC power to a heating lamp
