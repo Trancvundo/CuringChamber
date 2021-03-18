@@ -1,7 +1,10 @@
 
 //Libraries
 #include <DHT.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #define UINT32_MAX uint32_t(-1)
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 /*
  If you change pins, change in constants
@@ -91,11 +94,13 @@ float AverageHumidityLastHour;
 float AverageHumidityLastDay;
 float AverageHumidityLastMonth;
 float AverageCoolingOvershoot;
+unsigned int LCDLine;
 
 // waaarom moet dit?
 void updateState (ControlledValue &variable);
 void updateAverages (float temp, float hum);
 void getCurrentRuntime (int &days, int &hours, int &minutes, int &seconds);
+void writeDataToLCD (int column, int row, float temp, float hum);
 void printTime ();
 
 
@@ -142,6 +147,9 @@ void setup()
   AverageHumidityLastDay = 0;
   AverageHumidityLastMonth = 0;
   AverageCoolingOvershoot = 0.0;
+  LCDLine = 0;
+  lcd.init();
+  lcd.backlight();
   Serial.println ("\n\tDay\tHour\tMin\tSec\tT\tRH\tTemp\tHum.\tRunning Averages");//Need to change
 
 }
@@ -218,6 +226,69 @@ void loop()
     }
 
     Serial.println();
+
+    lcd.clear();
+
+    // LCD Display (16x2)
+    //   0123456789012345
+    // 0 Now:  15.0°C 75%    <- Current data, always displayed
+    // 1 Hour: 15.0°C 75%    <- Alt 1, daily average
+    // 1 Day:  15.0°C 75%    <- Alt 2, weekly average
+    // 1 Month:15.0°C 75%    <- Alt 3, monthly average
+    
+    lcd.setCursor(0,0);
+    lcd.print ("Now:");
+    writeDataToLCD (4, 0, Temperature.Current, Humidity.Current);
+    
+    lcd.setCursor(0,1);
+    switch (LCDLine) {
+      case 0:
+        lcd.setCursor(0,1);
+        lcd.print("Time:");
+        lcd.setCursor(5,1);
+        lcd.print(RuntimeInSeconds/3600);
+        lcd.setCursor(15,1);
+        lcd.print("h");
+        LCDLine++;
+        break;
+      case 1:
+        lcd.setCursor(0,1);
+        //lcd.print("Time:"); //why can i not change this??
+        writeDataToLCD (4, 1, Temp_Target, Humi_Target);        
+        if (RuntimeInSeconds >= 3600) {
+          LCDLine++;
+        } else {
+          LCDLine = 0;
+        }
+        break;
+      case 2:
+        lcd.setCursor(0,1);
+        lcd.print("Hrs:");
+        writeDataToLCD (4, 1, AverageTempLastHour, AverageHumidityLastHour);
+        if (RuntimeInSeconds >= 86400) {
+          LCDLine++;
+        } else {
+          LCDLine = 0;
+        }
+        break;
+      case 3:
+        lcd.setCursor(0,1);
+        lcd.print("Day:");
+        writeDataToLCD (4, 1, AverageTempLastDay, AverageHumidityLastDay);
+        if (RuntimeInSeconds >= 604800) {
+          LCDLine++;
+        } else {
+          LCDLine = 0;
+        }
+        break;
+      case 4:
+        lcd.setCursor(0,1);
+        lcd.print("Mth:");
+        writeDataToLCD (4, 1, AverageTempLastMonth, AverageHumidityLastMonth);
+        LCDLine = 0;
+        break;    
+    }
+  
 
     delay(pollRate); //Delay 15 sec.
 }
@@ -379,4 +450,24 @@ void updateAverages (float temp, float hum)
       }
     }
   }
-}   
+}
+
+void writeDataToLCD (int column, int row, float temp1, float hum1)
+{
+  // The format is "##.#°C ##%" and takes 10 columns total
+  if (column > 4) {
+    lcd.setCursor (0,row);
+    lcd.print ("!Bad LCD column!");
+  } else {
+    lcd.setCursor (column,row);
+    lcd.print (temp1);
+    lcd.setCursor (column+4,row);
+    lcd.print ((char)223); // The degree symbol
+    lcd.setCursor(column+5,row);
+    lcd.print ("C ");
+    lcd.setCursor (column+7,row);
+    lcd.print (hum1);
+    lcd.setCursor(column+11,row);
+    lcd.print("%");
+  }
+}
