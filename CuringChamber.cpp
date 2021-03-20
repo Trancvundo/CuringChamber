@@ -197,11 +197,11 @@ void loop()
         Serial.print("NOT_C");
     }    
     Serial.print ("\t");
-
+    */
     updateState (Temperature);
     updateState (Humidity);
     updateAverages (Temperature.Current, Humidity.Current);  
-    
+    /*
     // For now, print the averages every time (when they are valid):
     if (AverageTempLastHour > 0) {
       Serial.print ("Hourly: ");
