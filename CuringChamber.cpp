@@ -174,7 +174,7 @@ void loop()
     
     
     
-    
+    /*
     //Print temp and humidity values to serial monitor
     printTime();
     Serial.print (Temperature.Current,1);
@@ -224,9 +224,9 @@ void loop()
         }
       }
     }
-
+  
     Serial.println();
-
+    */
     lcd.clear();
 
     // LCD Display (16x2)
@@ -243,7 +243,6 @@ void loop()
     lcd.setCursor(0,1);
     switch (LCDLine) {
       case 0:
-        lcd.setCursor(0,1);
         lcd.print("Time:");
         lcd.setCursor(5,1);
         lcd.print(RuntimeInSeconds/3600);
@@ -252,8 +251,7 @@ void loop()
         LCDLine++;
         break;
       case 1:
-        lcd.setCursor(0,1);
-        //lcd.print("Time:"); //why can i not change this??
+        lcd.print("Tar:"); //why can i not change this??
         writeDataToLCD (4, 1, Temp_Target, Humi_Target);        
         if (RuntimeInSeconds >= 3600) {
           LCDLine++;
@@ -262,7 +260,6 @@ void loop()
         }
         break;
       case 2:
-        lcd.setCursor(0,1);
         lcd.print("Hrs:");
         writeDataToLCD (4, 1, AverageTempLastHour, AverageHumidityLastHour);
         if (RuntimeInSeconds >= 86400) {
@@ -272,7 +269,6 @@ void loop()
         }
         break;
       case 3:
-        lcd.setCursor(0,1);
         lcd.print("Day:");
         writeDataToLCD (4, 1, AverageTempLastDay, AverageHumidityLastDay);
         if (RuntimeInSeconds >= 604800) {
@@ -282,7 +278,6 @@ void loop()
         }
         break;
       case 4:
-        lcd.setCursor(0,1);
         lcd.print("Mth:");
         writeDataToLCD (4, 1, AverageTempLastMonth, AverageHumidityLastMonth);
         LCDLine = 0;
@@ -342,7 +337,7 @@ void getCurrentRuntime (unsigned long &days, unsigned long &hours, unsigned long
   seconds = computationSeconds;
 }
 
-
+/*
 void printTime ()
 {
   unsigned long days, hours, minutes, seconds;
@@ -358,7 +353,7 @@ void printTime ()
   Serial.print (seconds);
   Serial.print ("\t");
 }
-
+*/
 
 
 
