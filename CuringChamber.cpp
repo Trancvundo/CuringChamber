@@ -93,7 +93,6 @@ float AverageTempLastMonth;
 float AverageHumidityLastHour;
 float AverageHumidityLastDay;
 float AverageHumidityLastMonth;
-float AverageCoolingOvershoot;
 unsigned int LCDLine;
 
 // waaarom moet dit?
@@ -101,7 +100,6 @@ void updateState (ControlledValue &variable);
 void updateAverages (float temp, float hum);
 void getCurrentRuntime (int &days, int &hours, int &minutes, int &seconds);
 void writeDataToLCD (int column, int row, float temp, float hum);
-void printTime ();
 
 
 void setup()
@@ -150,8 +148,6 @@ void setup()
   LCDLine = 0;
   lcd.init();
   lcd.backlight();
-  Serial.println ("\n\tDay\tHour\tMin\tSec\tT\tRH\tTemp\tHum.\tRunning Averages");//Need to change
-
 }
 
 void loop()
@@ -172,61 +168,10 @@ void loop()
     Temperature.Current = temp;
     Humidity.Current = hum;
     
-    
-    
-    /*
-    //Print temp and humidity values to serial monitor
-    printTime();
-    Serial.print (Temperature.Current,1);
-    Serial.print ("\t");
-    Serial.print (Humidity.Current,1);
-    Serial.print ("\t");
-    if (Temperature.state == C_UP) {
-        Serial.print("C_UP");
-    } else if (Temperature.state == C_DOWN) {
-        Serial.print("C_DOWN");
-    } else {
-        Serial.print("NOT_C");
-    }
-    Serial.print ("\t");
-    if (Humidity.state == C_UP) {
-        Serial.print("C_UP");
-    } else if (Humidity.state == C_DOWN) {
-        Serial.print("C_DOWN");
-    } else {
-        Serial.print("NOT_C");
-    }    
-    Serial.print ("\t");
-    */
     updateState (Temperature);
     updateState (Humidity);
     updateAverages (Temperature.Current, Humidity.Current);  
-    /*
-    // For now, print the averages every time (when they are valid):
-    if (AverageTempLastHour > 0) {
-      Serial.print ("Hourly: ");
-      Serial.print (AverageTempLastHour);
-      Serial.print ("°C ");
-      Serial.print (AverageHumidityLastHour);
-      Serial.print ("% ");
-      if (AverageTempLastDay > 0) {
-        Serial.print (", Daily: ");
-        Serial.print (AverageTempLastDay);
-        Serial.print ("°C ");
-        Serial.print (AverageHumidityLastDay);
-        Serial.print ("% ");
-        if (AverageTempLastMonth > 0) {
-          Serial.print (", Monthly: ");
-          Serial.print (AverageTempLastMonth);
-          Serial.print ("°C ");
-          Serial.print (AverageHumidityLastMonth);
-          Serial.print ("% ");
-        }
-      }
-    }
-  
-    Serial.println();
-    */
+
     lcd.clear();
 
     // LCD Display (16x2)
@@ -251,7 +196,7 @@ void loop()
         LCDLine++;
         break;
       case 1:
-        lcd.print("Tar:"); //why can i not change this??
+        lcd.print("Tar:");
         writeDataToLCD (4, 1, Temp_Target, Humi_Target);        
         if (RuntimeInSeconds >= 3600) {
           LCDLine++;
@@ -337,25 +282,6 @@ void getCurrentRuntime (unsigned long &days, unsigned long &hours, unsigned long
   seconds = computationSeconds;
 }
 
-/*
-void printTime ()
-{
-  unsigned long days, hours, minutes, seconds;
-  getCurrentRuntime (days, hours, minutes, seconds);
-  Serial.print (RuntimeInSeconds);
-  Serial.print ("\t");
-  Serial.print (days);
-  Serial.print ("\t");
-  Serial.print (hours);
-  Serial.print ("\t");
-  Serial.print (minutes);
-  Serial.print ("\t");
-  Serial.print (seconds);
-  Serial.print ("\t");
-}
-*/
-
-
 
 void updateAverages (float temp, float hum)
 {
@@ -432,16 +358,7 @@ void updateAverages (float temp, float hum)
         humidityIntegrator += HumiditiesLastMonth[29];
             
         AverageTempLastMonth = tempIntegrator / count;
-        AverageHumidityLastMonth = humidityIntegrator / count;
-        
-        // Update the overshoot based on the average temp for the last day
-        float tOvershoot = Temp_Target - AverageTempLastDay;
-        // Adjust the overshoot correction value:
-        AverageCoolingOvershoot += tOvershoot;
-        Serial.print (" Overshoot updated to ");
-        Serial.print (AverageCoolingOvershoot);
-        Serial.write (176); // The degree symbol
-        Serial.print ("C. ");
+        AverageHumidityLastMonth = humidityIntegrator / count;   
       }
     }
   }
@@ -450,19 +367,14 @@ void updateAverages (float temp, float hum)
 void writeDataToLCD (int column, int row, float temp1, float hum1)
 {
   // The format is "##.#°C ##%" and takes 10 columns total
-  if (column > 4) {
-    lcd.setCursor (0,row);
-    lcd.print ("!Bad LCD column!");
-  } else {
-    lcd.setCursor (column,row);
-    lcd.print (temp1);
-    lcd.setCursor (column+4,row);
-    lcd.print ((char)223); // The degree symbol
-    lcd.setCursor(column+5,row);
-    lcd.print ("C ");
-    lcd.setCursor (column+7,row);
-    lcd.print (hum1);
-    lcd.setCursor(column+11,row);
-    lcd.print("%");
-  }
+  lcd.setCursor (column,row);
+  lcd.print (temp1);
+  lcd.setCursor (column+4,row);
+  lcd.print ((char)223); // The degree symbol
+  lcd.setCursor(column+5,row);
+  lcd.print ("C ");
+  lcd.setCursor (column+7,row);
+  lcd.print (hum1);
+  lcd.setCursor(column+11,row);
+  lcd.print("%");
 }
